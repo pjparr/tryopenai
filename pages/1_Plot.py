@@ -31,7 +31,3 @@ Streamlit. We're generating a bunch of random numbers in a loop for around
 # this button is not connected to any other logic, it just causes a plain
 # rerun.
 st.button("Re-run")
-
-
-
-

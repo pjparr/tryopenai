@@ -1,7 +1,7 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 
-client = InferenceClient(api_key="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")
+client = InferenceClient(api_key=st.secrets["hf_key"])
 
 
 ## here messages is the entire message history
@@ -20,19 +20,21 @@ def get_a_resp(theprompt: str, messages: list):  ##### list of dict values
         stream=True,
     )
 
-    return stream  #####   ?????
-    ###### WE ARE NOT GOING TO DO THIS - perhaps would have to use yield
-    # # streamlist = []
-    # # for chunk in stream:
-    # #     streamlist.append(chunk.choices[0].delta.content)
+    # Still streaming the individual words (the streamer would appear to add spaces between)
+    for chunk in stream:
+        yield chunk.choices[0].delta.content
 
-    # # return " ".join(streamlist)
+        ### (remember this turns a normal fucntion into a generator function)
 
 
 st.set_page_config(page_title="Simple convo", page_icon="📈")
-st.markdown("# Simple chat UI")
+st.markdown("# Simple chat UI - using HuggingFaceH4/starchat2-15b-v0.1")
 st.sidebar.header("Simple chat UI")
-st.write("""Simple LLM conversation with Streamlit widgets""")
+st.write("""Simple LLM conversation with Streamlit widgets and Hugging Face""")
+
+st.write(
+    "DB username:",
+)
 
 # session state - messages - will contain all the messages from user and assistant
 if "messages" not in st.session_state:
@@ -49,20 +51,9 @@ if prompt:
     # display the above message
     st.chat_message("user").write(prompt)
 
-    #### remember you need to send over everthing
-    stream = client.chat.completions.create(
-        model="HuggingFaceH4/starchat2-15b-v0.1",
-        messages=[
-            {"role": item["role"], "content": item["content"]}
-            for item in st.session_state.messages
-        ],
-        temperature=0.5,
-        max_tokens=1024,
-        top_p=0.7,
-        stream=True,
+    full_response = st.chat_message("assistant").write_stream(
+        get_a_resp(prompt, st.session_state.messages)
     )
-
-    full_response = st.chat_message("assistant").write_stream(stream)
 
     # below should be correct
     st.session_state.messages.append({"role": "assistant", "content": full_response})

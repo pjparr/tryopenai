@@ -12,7 +12,7 @@ st.write("""Simple request - response""")
 
 
 def get_a_resp(theprompt: str):
-    client = InferenceClient(api_key="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")
+    client = InferenceClient(api_key=st.secrets["hf_key"])
     messages = [{"role": "user", "content": theprompt}]
     stream = client.chat.completions.create(
         model="HuggingFaceH4/starchat2-15b-v0.1",
