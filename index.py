@@ -7,7 +7,7 @@ st.set_page_config(
 
 st.write("# Welcome to Streamlit! 👋")
 
-st.sidebar.success("Select a 1 above.")
+st.sidebar.success("Select one of the above.")
 
 st.markdown(
     """
