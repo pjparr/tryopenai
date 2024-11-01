@@ -8,9 +8,6 @@ st.sidebar.header("First attempt")
 st.write("""Simple request - response""")
 
 
-# create a side to show subpages
-
-
 def get_a_resp(theprompt: str):
     client = InferenceClient(api_key=st.secrets["hf_key"])
     messages = [{"role": "user", "content": theprompt}]

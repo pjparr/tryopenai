@@ -1,0 +1,9 @@
+1. text to image 
+2. image to text
+story of 3 images - then also provide ability to do variations
+langchain - simple
+langchain - course
+langchain mini projects
+
+
+
