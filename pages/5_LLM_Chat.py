@@ -32,10 +32,6 @@ st.markdown("# Simple chat UI - using HuggingFaceH4/starchat2-15b-v0.1")
 st.sidebar.header("Simple chat UI")
 st.write("""Simple LLM conversation with Streamlit widgets and Hugging Face""")
 
-st.write(
-    "DB username:",
-)
-
 # session state - messages - will contain all the messages from user and assistant
 if "messages" not in st.session_state:
     st.session_state.messages = []
