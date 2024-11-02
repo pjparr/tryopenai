@@ -17,12 +17,14 @@ st.markdown(
 
 # Helper fucntions
 
+
 def is_authenticated(user, password):
-    if (user == 'Admin' and password == "12345678"):
+    if user == "Admin" and password == "12345678":
         return True
     else:
         return False
+
+
 def linespace_generator(n_spaces=1):
     for i in range(n_spaces):
         st.write("")
-        
