@@ -3,12 +3,13 @@ import requests
 import io
 from PIL import Image
 from huggingface_hub import InferenceClient
+import os
+
 
 st.set_page_config(page_title="Text to Image", page_icon="📈")
 st.sidebar.header("Text to Image")
-#### use a dropdown to select either model
 st.write("""Simple request - response""")
-st.title("Text to image - no variations allowed")
+st.title("Text to image - no variations")
 
 
 ################################################################################
@@ -33,7 +34,17 @@ def get_text_resp(theprompt: str):
     return " ".join(streamlist)
 
 
-API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev"
+# Select a model
+model_option = st.selectbox()
+    "Which model do you wish to use?",
+    (
+        "Select",
+        "black-forest-labs/FLUX.1-dev",
+        "stabilityai/stable-diffusion-3-medium-diffusers",
+    ),
+)
+
+API_URL = f"https://api-inference.huggingface.co/models/{model_option}"
 headers = {"Authorization": f"Bearer {st.secrets["hf_key_read"]}"}
 
 
@@ -45,7 +56,7 @@ def get_image_resp(payload):
 
     # create a temp file
     image = Image.open(io.BytesIO(response.content))
-    image.save("./tempimage.png")
+    image.save(f"./{st.session_state.image_counter}.png")
 
     return True
 
@@ -54,37 +65,54 @@ def get_image_resp(payload):
 ## Text to image with chat
 ################################################################################
 
+
 ##############################################
 ## initialise messages
 ##############################################
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# # for m in st.session_state.messages:
-# #     if m["role"] == "user":
-# #         st.chat_message(m["role"]).write(m["content"])
-# #     if m["role"] == "assistant":
-# #         image = Image.open("./tempimage.png")
-# #         st.image(image)
+    cmd = "del ?.png"
+    returned_value = os.system(cmd)  # returns the exit code in Unix
+    print("Returned value:", returned_value)
 
-prompt = st.chat_input("Describe your desired image...")
-if prompt:
-    # add to the messages store
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.image_counter = 0
 
-    # display the above message
-    st.chat_message("user").write(prompt)
 
-    with st.spinner("Busy generating..."):
-        # generate the image
-        get_image_resp({"inputs": prompt})
+for m in st.session_state.messages:
+    if m["role"] == "user":
+        st.chat_message(m["role"]).write(m["content"])
+    if m["role"] == "assistant":
+        ## check if file exists, if not show failed / interupted image
+        print("checking path  ", f"./{m["content"]}.png")
+        if os.path.exists(f"./{m["content"]}.png"):
+            image = Image.open(f"./{m["content"]}.png")
+            st.image(image)
+        else:
+            image = Image.open("./error.png")
+            st.image(image)
 
-    ## show the assistant prompt ONLY
-    with st.chat_message("assistant"):
-        image = Image.open("./tempimage.png")
-        st.image(image, caption=f"Here is your picture - {prompt}")
+if model_option != "Select":
+    prompt = st.chat_input("Describe your desired image...")
+    if prompt:
+        st.session_state.image_counter = st.session_state.image_counter + 1
+
+        # add to the messages store
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        # display the above message
+        st.chat_message("user").write(prompt)
+
+        with st.spinner("Busy generating..."):
+            # generate the image
+            get_image_resp({"inputs": prompt})
+
+        ## show the assistant prompt ONLY
+        with st.chat_message("assistant"):
+            image = Image.open(f"./{st.session_state.image_counter}.png")
+            st.image(image)
 
         # below should be correct
         st.session_state.messages.append(
-            {"role": "assistant", "content": "./tempimage.png"}
+            {"role": "assistant", "content": st.session_state.image_counter}
         )

@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import io
 from PIL import Image
+import os
 
 API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev"
 headers = {"Authorization": f"Bearer {st.secrets["hf_key_read"]}"}
@@ -20,10 +21,16 @@ def get_image_resp(payload):
     return True
 
 
-fn = get_image_resp(
-    {
-        "inputs": "can i have a picture of a shark",
-    }
-)
+# fn = get_image_resp(
+#     {
+#         "inputs": "can i have a picture of a shark",
+#     }
+# )
 
-print(f"the return is {fn}")
+# print(f"the return is {fn}")
+
+
+if os.path.exists("./1.png"):
+    print("does exist")
+else:
+    print("npt")
