@@ -37,9 +37,7 @@ st.session_state.model_selection_index = model_options.index(model_option)
 ## Helper functions
 ################################################################################
 def get_image_resp(payload):
-    API_URL = (
-        f"https://api-inference.huggingface.co/models/{model_options[model_option]}"
-    )
+    API_URL = f"https://api-inference.huggingface.co/models/{model_options[st.session_state.model_selection_index]}"
     headers = {"Authorization": f"Bearer {st.secrets["hf_key_read"]}"}
 
     # is there await / async concept in python?
