@@ -5,6 +5,16 @@ from PIL import Image
 from huggingface_hub import InferenceClient
 import os
 
+################################################################################
+## Text to image with chat
+################################################################################
+
+# Select a model (later get the full list of models)
+model_options = [
+    "Select",
+    "black-forest-labs/FLUX.1-dev",
+    "stabilityai/stable-diffusion-3-medium-diffusers",
+]
 
 st.set_page_config(page_title="Text to Image", page_icon="📈")
 st.sidebar.header("Text to Image")
@@ -12,43 +22,26 @@ st.write("""Simple request - response""")
 st.title("Text to image - no variations")
 
 
+if "model_selection_index" not in st.session_state:
+    st.session_state.model_selection_index = 0
+
+model_option = st.selectbox(
+    "Which model do you wish to use?",
+    model_options,
+    index=st.session_state.model_selection_index,
+)
+st.session_state.model_selection_index = model_options.index(model_option)
+
+
 ################################################################################
 ## Helper functions
 ################################################################################
-def get_text_resp(theprompt: str):
-    client = InferenceClient(api_key=st.secrets["hf_key"])
-    messages = [{"role": "user", "content": theprompt}]
-    stream = client.chat.completions.create(
-        model="HuggingFaceH4/starchat2-15b-v0.1",
-        messages=messages,
-        temperature=0.5,
-        max_tokens=1024,
-        top_p=0.7,
-        stream=True,
-    )
-
-    streamlist = []
-    for chunk in stream:
-        streamlist.append(chunk.choices[0].delta.content)
-
-    return " ".join(streamlist)
-
-
-# Select a model
-model_option = st.selectbox()
-    "Which model do you wish to use?",
-    (
-        "Select",
-        "black-forest-labs/FLUX.1-dev",
-        "stabilityai/stable-diffusion-3-medium-diffusers",
-    ),
-)
-
-API_URL = f"https://api-inference.huggingface.co/models/{model_option}"
-headers = {"Authorization": f"Bearer {st.secrets["hf_key_read"]}"}
-
-
 def get_image_resp(payload):
+    API_URL = (
+        f"https://api-inference.huggingface.co/models/{model_options[model_option]}"
+    )
+    headers = {"Authorization": f"Bearer {st.secrets["hf_key_read"]}"}
+
     # is there await / async concept in python?
     print(payload)
     # get the response
@@ -59,11 +52,6 @@ def get_image_resp(payload):
     image.save(f"./{st.session_state.image_counter}.png")
 
     return True
-
-
-################################################################################
-## Text to image with chat
-################################################################################
 
 
 ##############################################
@@ -84,7 +72,6 @@ for m in st.session_state.messages:
         st.chat_message(m["role"]).write(m["content"])
     if m["role"] == "assistant":
         ## check if file exists, if not show failed / interupted image
-        print("checking path  ", f"./{m["content"]}.png")
         if os.path.exists(f"./{m["content"]}.png"):
             image = Image.open(f"./{m["content"]}.png")
             st.image(image)
@@ -99,6 +86,9 @@ if model_option != "Select":
 
         # add to the messages store
         st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append(
+            {"role": "assistant", "content": st.session_state.image_counter}
+        )
 
         # display the above message
         st.chat_message("user").write(prompt)
@@ -111,8 +101,3 @@ if model_option != "Select":
         with st.chat_message("assistant"):
             image = Image.open(f"./{st.session_state.image_counter}.png")
             st.image(image)
-
-        # below should be correct
-        st.session_state.messages.append(
-            {"role": "assistant", "content": st.session_state.image_counter}
-        )
